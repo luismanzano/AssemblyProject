@@ -15,35 +15,41 @@
 	syscall 
 	
 	li $v0,8
-	syscall
-	move $t0,$v0
+	la $a0, numero1 #load byte space into address
+        li $a1, 50 # allot the byte space for string
+        # GUARDADO PARA MAS TARDE save string to t0 move -> $t0,$a0 
+        syscall
+        
+	#sw $a0, numero1 #cambiando a sw para guardar el string en memoria
 	
 	li $v0,4
 	la $a0,salto
 	syscall
 	
 	li $v0,4
-	la $a0, mensaje2
+	la $a0, mensaje2 #mostrar que tiene que ingresar el segundo numero a operar
 	syscall
 	
 	li $v0,8
-	syscall
-	move $t1,$v0
+	la $a0, numero2 #load byte space into address
+        li $a1, 50 # allot the byte space for string
+        # GUARDADO PARA MAS TARDE save string to t1 move -> move $t1,$a0 
+        syscall
 
 	li $v0,4
 	la $a0,salto
 	syscall
 
-	li $v0,4
-	move $a0,$t0
+	li $v0, 4
+	la $a0, numero1
 	syscall
 	
 	li $v0,4
 	la $a0,salto
 	syscall
 	
-	li $v0,4
-	move $a0,$t1
+	li $v0, 4
+	la $a0, numero2
 	syscall
 
 	li $v0,10
