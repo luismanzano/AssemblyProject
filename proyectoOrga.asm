@@ -1,16 +1,41 @@
 		.data
-
+ bienvenida:	.asciiz "Bienvenido a la calculadora aritmetica de enteros largos\n"
  mensaje1: 	.asciiz "Ingrese el primer numero "
  mensaje2: 	.asciiz "Ingrese el segundo numero "
  mensaje3:	.asciiz "Indique la operacion a realizar Sumar(0), Restar(1), Multiplicar(2)"
- mensajeFinal: 	.asciiz "El resultado de la operacion es "
+ mensajeR: 	.asciiz "El resultado de la operacion es "
+ continuar:	.asciiz "\n¿Desea realizar otra operacion?  SI(1), NO(0)\n"
  salto:		.asciiz "\n"
- numero1: 	.space 56
- numero2: 	.space 56
+ numero1: 	.space 50
+ numero2: 	.space 50
+ resultado:	.space 50
+ tabla:		.space 47 #Tabla ASCII para realizar las operaciones
+ 		.byte 0,1,2,3,4,5,6,7,8,9
+ 		.space 198
  
-
 	.text
+	
+	li $v0, 4
+	la $a0, bienvenida
+	syscall
+regresar: #Si el usuario desea realizar otra operacion	
+	li $v0,4
+	la $a0,salto
+	syscall
+	
+	li $v0, 4
+        la $a0, mensaje3 #Mensaje para indicar la operacion
+        syscall
 
+	li $v0,4
+	la $a0,salto
+	syscall
+	
+	#El usuario indica la opracion a ralizar
+	li $v0, 5
+	syscall
+	move $t0, $v0
+	
 	li $v0, 4
 	la $a0, mensaje1 #Mensaje para ingresar el primer numero 
 	syscall 
@@ -37,35 +62,74 @@
 	la $a0,salto
 	syscall
         
-        li $v0, 4
-        la $a0, mensaje3 #Mensaje para indicar la operacion
-        syscall
-
-	li $v0,4
-	la $a0,salto
-	syscall
-	
-	#El usuario indica la opracion a ralizar
-	li $v0, 5
-	syscall
-	move $t0, $v0
-	
 	beq $t0, 0, suma
 	beq $t0, 1, resta
 	beq $t0, 2, multi
 	
-suma:	li $v0, 1
-	li $a0, 0
-	syscall
+suma:	
+	li $t0, 0 #Indice para recorrer los numeros ingresados por el usuario
+	li $s0, 0 #Numero de acarreo 
+loopS1: # Proceso de sumar
+	lb $t1, numero1($t0)
+	lb $t2, numero2($t0)
+	lb $t3, tabla($t1)
+	lb $t4, tabla($t2)
+	add $s1, $t3,$t4
+	add $s1, $s1, $s0
+	li $s0, 0
+	bgt $s1, 9, acarreoSuma
+sumaC:	# Se continua con la suma 	
+	sb $s1, resultado($t0)
+	addi $t0, $t0, 1
+	ble $t0, ,49, loopS1
+		
+	b final #Se finaliza la operacion
 
-resta:	li $v0, 1
+resta:	
+	li $v0, 1
 	li $a0, 1
 	syscall
+	
+	b final
 
-multi:	li $v0, 1
+multi:	
+	li $v0, 1
 	li $a0, 2
 	syscall
 	
+final: #Imprimir el resultado de la operacion 	
+	li $v0, 4
+	la $a0, mensajeR
+	syscall
+	
+	li $v0,4
+	la $a0,salto
+	syscall
+	
+	li $t0,49
+ #imprimir: 	
+	li $v0, 4
+	la $a0, resultado#($t0)
+	syscall
+	#subi $t0, $t0, 1
+	#bgez $t0, imprimir
+	
+	li $v0, 4
+	la $a0, continuar
+	syscall
+	
+	li $v0, 5
+	syscall
+	move $t0, $v0
+	
+	beq $t0, 1, regresar
+	  
+					
 	li $v0,10
 	syscall
 
+acarreoSuma: #Llevo 1 en la suma
+	subi $s1, $s1, 10
+	addi $s0, $s0, 1
+	b sumaC
+	
