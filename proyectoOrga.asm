@@ -9,9 +9,10 @@
  numero1: 	.space 50
  numero2: 	.space 50
  resultado:	.space 50
- tabla:		.space 47 #Tabla ASCII para realizar las operaciones
+ tabla:		.space 48 #Tabla ASCII para realizar las operaciones
  		.byte 0,1,2,3,4,5,6,7,8,9
  		.space 198
+ numeros:	.asciiz "0123456789"	 		
  
 	.text
 	
@@ -22,19 +23,6 @@ regresar: #Si el usuario desea realizar otra operacion
 	li $v0,4
 	la $a0,salto
 	syscall
-	
-	li $v0, 4
-        la $a0, mensaje3 #Mensaje para indicar la operacion
-        syscall
-
-	li $v0,4
-	la $a0,salto
-	syscall
-	
-	#El usuario indica la opracion a ralizar
-	li $v0, 5
-	syscall
-	move $t0, $v0
 	
 	li $v0, 4
 	la $a0, mensaje1 #Mensaje para ingresar el primer numero 
@@ -61,15 +49,30 @@ regresar: #Si el usuario desea realizar otra operacion
         li $v0,4
 	la $a0,salto
 	syscall
+operacion:        
+        li $v0, 4
+        la $a0, mensaje3 #Mensaje para indicar la operacion
+        syscall
+
+	li $v0,4
+	la $a0,salto
+	syscall
+	
+	#El usuario indica la opracion a ralizar
+	li $v0, 5
+	syscall
+	move $t0, $v0
         
 	beq $t0, 0, suma
 	beq $t0, 1, resta
 	beq $t0, 2, multi
+	bgt $t0, 2, operacion
 	
 suma:	
-	li $t0, 0 #Indice para recorrer los numeros ingresados por el usuario
-	li $s0, 0 #Numero de acarreo 
-loopS1: # Proceso de sumar
+	li $t0, 49 #Indice para recorrer los numeros ingresados por el usuario
+	li $s0, 0 #Numero de acarreo
+	#li $t9, 0#Indice para guardar el resultado
+loopS: # Proceso de sumar
 	lb $t1, numero1($t0)
 	lb $t2, numero2($t0)
 	lb $t3, tabla($t1)
@@ -78,10 +81,12 @@ loopS1: # Proceso de sumar
 	add $s1, $s1, $s0
 	li $s0, 0
 	bgt $s1, 9, acarreoSuma
-sumaC:	# Se continua con la suma 	
-	sb $s1, resultado($t0)
-	addi $t0, $t0, 1
-	ble $t0, ,49, loopS1
+sumaC:	# Se continua con la suma
+	lb $t5,numeros($s1) 	
+	sb $t5, resultado($t0)
+	subi $t0, $t0, 1
+	#addi $t9, $t9, 1
+	bge $t0, 0, loopS
 		
 	b final #Se finaliza la operacion
 
@@ -130,6 +135,6 @@ final: #Imprimir el resultado de la operacion
 
 acarreoSuma: #Llevo 1 en la suma
 	subi $s1, $s1, 10
-	addi $s0, $s0, 1
+	li $s0, 1
 	b sumaC
 	
