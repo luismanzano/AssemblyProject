@@ -20,6 +20,16 @@
 	syscall
 	.end_macro
 	
+	.macro resetar %memoria
+	li $t0, 49
+	li $t4, 0x00
+loopL:
+	sb $t4, %memoria($t0)
+	subi $t0, $t0, 1
+	bgez $t0, loopL
+	
+	.end_macro
+	
 	.macro indice %numero, %indice #Metodo para conocer el numero con mas digitos 	
 	li $t0, 0 #Indice para recorrer el numero de izquierda a derecha 
 	li $t1, 0 #Contador
@@ -58,23 +68,81 @@ loopA2:
 	.end_macro 
 	
 	 
-	 .macro es_mayor %indice_mayor, %indice_menor #Numero con mas digitos 
+	 .macro es_mayor %indice1, %indice2 #Numero con mas digitos 
 	 
-	 move $t0, %indice_mayor
-	 move $t1, %indice_menor
+	 move $t0, %indice1
+	 move $t1, %indice2
 	 
-	 bgt $t0, $t1, finalM
-	 beq $t1, $t0, finalM
-	 
-	 move %indice_mayor, $t1
-	 move %indice_menor, $t0
+	 bgt $t0, $t1, es_mayor1
+	 bgt $t1, $t0, es_mayor2
+	 beq $t1, $t0, es_igual
+
+es_mayor1:
+
+	li $t8, 0
+	b finalM
+
+es_mayor2:
+	li $t8, 1
+	b finalM
+
+es_igual:
+	 	 	 	 	 
+	li $t0, 0
+	
+loopR:			 
+	lb $t2, aux1($t0) #Cargo el digito en la posicion $t8
+	lb $t3, aux2($t0) 
+	subi $t2, $t2, 0x30 #Convrtir a decimal
+	subi $t3, $t3, 0x30
+	bgt $t2, $t3, es_mayor1
+	bgt $t3, $t2, es_mayor2
+	addi $t0, $t0, 1
+	blt $t0, 49 loopR
+	
+	li $s0, 0
 
 finalM:	 	 
 	 .end_macro  
 	 
-	 
-	 
-	 
+	 .macro restar %numero_mayor, %numero_menor
+	 	
+	li $t0, 49
+	li $t9, 0 #Acarreo
+	
+loopR:			 
+	lb $t2, %numero_mayor($t0) #Cargo el digito en la posicion $t8
+	lb $t3, %numero_menor($t0)
+	subi $t2, $t2, 0x30 #Convrtir a decimal
+	subi $t3, $t3, 0x30
+	#bgt $t9, $t2, acarreoMayor
+	sub $t2, $t2, $t9 #Continuo y resto el acarreo
+	li $t9, 0
+	bgt $t3, $t2, acarreoResta
+	sub $t4, $t2, $t3
+	
+	
+restaC:	# Se continua con la resta
+	addi $t4 $t4, 0x30 #Convertir a ASCII
+	sb $t4, resultado($t0)#Almacenar digito
+	subi $t0, $t0, 1 #Cambiar indice 
+	bgez $t0, loopR
+	
+	b finalR
+	
+	acarreoResta: 
+	addi $t2, $t2, 10
+	li $t9, 1
+	b restaC	
+	
+	acarreoMayor: 
+	addi $t2, $t2, 10
+	subi $t2, $t2, 1
+	sub $t4, $t2, $t3
+	b restaC
+
+finalR:	
+	 .end_macro
 	 
 	 
 	
@@ -92,8 +160,7 @@ regresar: #Si el usuario desea realizar otra operacion
         li $a1, 50 #Se indica m�ximo de bytes para escribir  
         syscall
         
-        indice(numero1, $t3)
-        agregar0(numero1, $t3, aux1)
+        
         imprimir_string(salto)
 	
 	imprimir_string(mensaje2)
@@ -105,9 +172,13 @@ regresar: #Si el usuario desea realizar otra operacion
         
         imprimir_string(salto)
 	
-	 
-	indice(numero2, $t3)
-	agregar0(numero2, $t3, aux2)
+	indice(numero1, $t3)
+        agregar0(numero1, $t3, aux1)
+         
+	indice(numero2, $t5)
+	agregar0(numero2, $t5, aux2)
+	
+	es_mayor($t3, $t5)
         
         
 operacion:        
@@ -151,12 +222,22 @@ sumaC:	# Se continua con la suma
 		
 
 resta:	
-	li $v0, 1
-	li $a0, 1
-	syscall
-	
-	b final
+	beq $t8, 0, numero1_es_mayor
+	beq $t8, 1, numero2_es_mayor
 
+numero1_es_mayor:				
+
+	restar(aux1, aux2)
+
+	b finalResta
+
+numero2_es_mayor:
+
+	restar(aux2, aux1)
+
+finalResta:
+	b final
+					
 multi:	
 	li $v0, 1
 	li $a0, 2
@@ -175,8 +256,7 @@ final: #Imprimir el resultado de la operacion
 	syscall
 	move $t0, $v0
 	
-	beq $t0, 1, regresar
-	  
+	beq $t0, 1, limpiar
 					
 	li $v0,10
 	syscall
@@ -185,4 +265,12 @@ acarreoSuma: #Llevo 1 en la suma
 	subi $t4, $t4, 10
 	li $t9, 1
 	b sumaC
+	
+limpiar:
+	resetar(numero1)
+	resetar(numero2)
+	resetar(aux1)
+	resetar(aux2)
+	resetar(resultado)
+	b regresar 	
 	
