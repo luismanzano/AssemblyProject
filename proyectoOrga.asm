@@ -6,7 +6,7 @@
  mensajeR: 	.asciiz "El resultado de la operacion es "
  continuar:	.asciiz "\n�Desea realizar otra operacion?  SI(1), NO(0)\n"
  salto:		.asciiz "\n"
- numero1: 	.space 50
+ numero1: 	.space 50 
  numero2: 	.space 50
  resultado:	.space 50
  
@@ -18,44 +18,64 @@
 	syscall
 	.end_macro
 	
-	.macro indice %numero1, %numero2, %indice #Metodo para conocer el numero con mas digitos 	
-	li $t0, 0
-	li $t1, 0
+	.macro indice %numero, %indice #Metodo para conocer el numero con mas digitos 	
+	li $t0, 0 #Indice para recorrer el numero de izquierda a derecha 
+	li $t1, 0 #Contador
 	
-loop1:	
+loopI1:	
 	lb $t2, %numero1($t0)
-	subiu $t2, $t2, 0x30
-	blt $t2, 0, final1
+	subiu $t2, $t2, 0x29 
+	blt $t2, 0, finalI1  
 	addi $t0, $t0, 1
 	addi $t1, $t1, 1
-	bgt $t2, 0, loop1
+	bgt $t2, 0, loopI1
 	
-final1:	
-	li $t0, 0
-	li $t3, 0
-	
-loop2:	lb $t2, %numero2($t0)
-	subiu $t2, $t2, 0x30
-	blt $t2, 0, final2
-	addi $t0, $t0, 1
-	addi $t3, $t3, 1
-	bgt $t2, 0, loop2
-	
-final2: 
-	bgt $t1, $t3, es_mayor1
-	bgt $t3, $t1, es_mayor2
-	beq $t1, $t3, finalI
-	
-es_mayor1:
-	move %indice,$t1
-loop3:	
-	b finalI
-es_mayor2: 
-	move %indice,$t3
-loop4:	
-	
-finalI:									
+finalI1:	
+	move %indice, $t1 
+										
 	.end_macro
+	
+	.macro agregar0 %numero_mayor, %indice_mayor, %numero_menor, %indice_menor #Metodo para agregar 0's a la izquierda de los numeros
+	
+	li $t0, %indice_mayor
+	li $t1, %indice_mayor
+	subi $t0, $t0, 1
+loopA1:	
+	lb $t2, %numero_mayor($t0)
+	lb $t3, %numero_mayor($t1)
+	sb $t2, %numero_mayor($t1)
+	sb $t3, %numero_mayor($t0)
+	subi $t1, $t1, 1
+	bgez $t1, loopA1
+	
+	li $t0, %indice_mayor
+	li $t1, %indice_menor
+	sub $t3, $t0, $t1
+	add $t1, $t1, $t3
+	subi $t0, $t0, 1
+loopA2:	
+	lb $t2, %numero_menor($t0)
+	lb $t3, %numero_menor($t1)
+	sb $t2, %numero_menor($t1)
+	sb $t3, %numero_menor($t0)
+	subi $t1, $t1, 1
+	bgez $t1, loopA2
+	
+	.end_macro 
+	
+	 .macro es_mayor %indice_mayor, %indice_menor #Numero con mas digitos 
+	 
+	 move $t0, %indice_mayor
+	 move $t1, %indice_menor
+	 
+	 bgt $t0, $t1, finalM
+	 beq $t1, $t0, finalM
+	 
+	move %indice_mayor, $t1
+	move %indice_menor, $t0
+
+finalM:	 	 
+	 .end_macro  
 	
 	
 	imprimir_string(bienvenida)	
@@ -81,6 +101,13 @@ regresar: #Si el usuario desea realizar otra operacion
         syscall
         
         imprimir_string(salto)
+	
+	indice(numero1, $s0) 
+	indice(numero2, $s1)
+        es_mayor($s0, $s1)
+        
+	
+
         
 operacion:        
         
@@ -98,25 +125,26 @@ operacion:
 	beq $t0, 3, multi
 	bgt $t0, 3, operacion
 	blt $t0, 1, operacion
-	
+					
 suma:	#Operacion de suma 
-	indice(numero1, numero2, $t8)
-	li $t9, 0
 	
-loopS:
-	lb $t2, numero1($t8)
-	lb $t3, numero2($t8)
-	subi $t2, $t2, 0x30
+	subi $s0, $s0, 1
+	li $t9, 0 #Acarreo
+	
+loopS:			 
+	lb $t2, numero1($s0) #Cargo el digito en la posicion $t8
+	lb $t3, numero2($s0)
+	subi $t2, $t2, 0x30 #Convrtir a decimal
 	subi $t3, $t3, 0x30
-	add $t4, $t2, $t3
-	add $t4, $t4, $t9
-	li $t1, 0
+	add $t4, $t2, $t3 #Suma de digitos
+	add $t4, $t4, $t9 #Suma de acarreos
+	li $t9, 0
 	bgt $t4, 9, acarreoSuma
-sumaC:	
-	addi $t4 $t4, 0x30
-	sb $t4, resultado($t8)
-	subi $t8, $t8, 1
-	bge $t0, 0,loopS
+sumaC:	# Se continua con la suma
+	addi $t4 $t4, 0x30 #Convertir a ASCII
+	sb $t4, resultado($s0)#Almacenar digito
+	subi $s0, $s0, 1 #Cambiar indice 
+	bgez $s0, loopS
 	
 	b final
 		
@@ -153,7 +181,7 @@ final: #Imprimir el resultado de la operacion
 	syscall
 
 acarreoSuma: #Llevo 1 en la suma
-	subi $s1, $s1, 10
+	subi $t4, $t4, 10
 	li $t9, 1
 	b sumaC
 	
