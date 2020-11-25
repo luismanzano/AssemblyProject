@@ -25,7 +25,7 @@
 	li $t1, 0 #Contador
 	
 loopI1:	
-	lb $t2, %numero1($t0)
+	lb $t2, %numero($t0)
 	subiu $t2, $t2, 0x29 
 	blt $t2, 0, finalI1  
 	addi $t0, $t0, 1
@@ -43,29 +43,16 @@ finalI1:
 	
 	
 	
-	.macro agregar0 %numero, %indice, %aux, %salto #Metodo para agregar 0's a la izquierda de los numeros
+	.macro agregar0 %numero, %indice, %aux #Metodo para agregar 0's a la izquierda de los numeros
 	li $t0, 50
 	li $t1, %indice
-	li $t1, 1
 	subi $t1, $t1, 1
 	
-	bgez %aux loop
-	beq %aux, $t1, loop2
-	
 loopA1:	lb $t4, %numero($t1) #cargamos el ultimo numero ingresado por el usuario en t4
-	sb $t4, aux1($t0)
+	sb $t4, %aux($t0)
 	subi $t0, $t0, 1
 	subi $t1, $t1, 1
 	bgez $t1, loopA1
-	b  finalA
-	
-loopA2:	lb $t4, %numero($t1) #cargamos el ultimo numero ingresado por el usuario en t4
-	sb $t4, aux1($t0)
-	subi $t0, $t0, 1
-	subi $t1, $t1, 1
-	bgez $t1, loopA2
-	
-finalA: 
 	
 		
 	
@@ -125,9 +112,11 @@ regresar: #Si el usuario desea realizar otra operacion
         
         imprimir_string(salto)
 	
-	indice(numero1, $s0) 
-	indice(numero2, $s1)
-        es_mayor($s0, $s1)
+	indice(numero1, $t4) 
+	indice(numero2, $t5)
+	agregar0(numero1, $t4, aux1)
+	agregar0(numero2, $t5, aux2)
+        #es_mayor($s0, $s1)
         
 	
 
@@ -151,12 +140,12 @@ operacion:
 					
 suma:	#Operacion de suma 
 	
-	subi $s0, $s0, 1
+	li $t0, 50
 	li $t9, 0 #Acarreo
 	
 loopS:			 
-	lb $t2, numero1($s0) #Cargo el digito en la posicion $t8
-	lb $t3, numero2($s0)
+	lb $t2, aux1($t0) #Cargo el digito en la posicion $t8
+	lb $t3, aux2($t0)
 	subi $t2, $t2, 0x30 #Convrtir a decimal
 	subi $t3, $t3, 0x30
 	add $t4, $t2, $t3 #Suma de digitos
@@ -165,9 +154,9 @@ loopS:
 	bgt $t4, 9, acarreoSuma
 sumaC:	# Se continua con la suma
 	addi $t4 $t4, 0x30 #Convertir a ASCII
-	sb $t4, resultado($s0)#Almacenar digito
-	subi $s0, $s0, 1 #Cambiar indice 
-	bgez $s0, loopS
+	sb $t4, resultado($t0)#Almacenar digito
+	subi $t0, $t0, 1 #Cambiar indice 
+	bgez $t0, loopS
 	
 	b final
 		
