@@ -8,6 +8,8 @@
  salto:		.asciiz "\n"
  numero1: 	.space 50 
  numero2: 	.space 50
+ aux1:		.space 50
+ aux2: 		.space 50
  resultado:	.space 50
  
 	.text
@@ -35,34 +37,49 @@ finalI1:
 										
 	.end_macro
 	
-	.macro agregar0 %numero_mayor, %indice_mayor, %numero_menor, %indice_menor #Metodo para agregar 0's a la izquierda de los numeros
 	
-	li $t0, %indice_mayor
-	li $t1, %indice_mayor
+	
+	
+	
+	
+	
+	.macro agregar0 %numero, %indice, %aux, %salto #Metodo para agregar 0's a la izquierda de los numeros
+	li $t0, 50
+	li $t1, %indice
+	li $t1, 1
+	subi $t1, $t1, 1
+	
+	bgez %aux loop
+	beq %aux, $t1, loop2
+	
+loopA1:	lb $t4, %numero($t1) #cargamos el ultimo numero ingresado por el usuario en t4
+	sb $t4, aux1($t0)
 	subi $t0, $t0, 1
-loopA1:	
-	lb $t2, %numero_mayor($t0)
-	lb $t3, %numero_mayor($t1)
-	sb $t2, %numero_mayor($t1)
-	sb $t3, %numero_mayor($t0)
 	subi $t1, $t1, 1
 	bgez $t1, loopA1
+	b  finalA
 	
-	li $t0, %indice_mayor
-	li $t1, %indice_menor
-	sub $t3, $t0, $t1
-	add $t1, $t1, $t3
+loopA2:	lb $t4, %numero($t1) #cargamos el ultimo numero ingresado por el usuario en t4
+	sb $t4, aux1($t0)
 	subi $t0, $t0, 1
-loopA2:	
-	lb $t2, %numero_menor($t0)
-	lb $t3, %numero_menor($t1)
-	sb $t2, %numero_menor($t1)
-	sb $t3, %numero_menor($t0)
 	subi $t1, $t1, 1
 	bgez $t1, loopA2
 	
+finalA: 
+	
+		
+	
 	.end_macro 
 	
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
 	 .macro es_mayor %indice_mayor, %indice_menor #Numero con mas digitos 
 	 
 	 move $t0, %indice_mayor
@@ -76,6 +93,12 @@ loopA2:
 
 finalM:	 	 
 	 .end_macro  
+	 
+	 
+	 
+	 
+	 
+	 
 	
 	
 	imprimir_string(bienvenida)	
