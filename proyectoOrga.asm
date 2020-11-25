@@ -31,41 +31,32 @@ loopI1:
 	addi $t0, $t0, 1
 	addi $t1, $t1, 1
 	bgt $t2, 0, loopI1
-	
-finalI1:	
+
+finalI1:		
 	move %indice, $t1 
 										
 	.end_macro
 	
-	
-	
-	
-	
-	
-	
 	.macro agregar0 %numero, %indice, %aux #Metodo para agregar 0's a la izquierda de los numeros
-	li $t0, 50
-	li $t1, %indice
+	li $t0, 49
+	move $t1, %indice
 	subi $t1, $t1, 1
 	
-loopA1:	lb $t4, %numero($t1) #cargamos el ultimo numero ingresado por el usuario en t4
+loopA1:	
+	lb $t4, %numero($t1) #cargamos el ultimo numero ingresado por el usuario en t4
 	sb $t4, %aux($t0)
 	subi $t0, $t0, 1
 	subi $t1, $t1, 1
 	bgez $t1, loopA1
-	
-		
+loopA2:
+	lb $t4, %aux($t0)
+	addi $t4, $t4, 0x30
+	sb $t4, %aux($t0)
+	subi $t0, $t0, 1
+	bgez $t0, loopA2
 	
 	.end_macro 
 	
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
 	 
 	 .macro es_mayor %indice_mayor, %indice_menor #Numero con mas digitos 
 	 
@@ -75,8 +66,8 @@ loopA1:	lb $t4, %numero($t1) #cargamos el ultimo numero ingresado por el usuario
 	 bgt $t0, $t1, finalM
 	 beq $t1, $t0, finalM
 	 
-	move %indice_mayor, $t1
-	move %indice_menor, $t0
+	 move %indice_mayor, $t1
+	 move %indice_menor, $t0
 
 finalM:	 	 
 	 .end_macro  
@@ -101,7 +92,9 @@ regresar: #Si el usuario desea realizar otra operacion
         li $a1, 50 #Se indica m�ximo de bytes para escribir  
         syscall
         
-	imprimir_string(salto)
+        indice(numero1, $t3)
+        agregar0(numero1, $t3, aux1)
+        imprimir_string(salto)
 	
 	imprimir_string(mensaje2)
 	
@@ -112,14 +105,10 @@ regresar: #Si el usuario desea realizar otra operacion
         
         imprimir_string(salto)
 	
-	indice(numero1, $t4) 
-	indice(numero2, $t5)
-	agregar0(numero1, $t4, aux1)
-	agregar0(numero2, $t5, aux2)
-        #es_mayor($s0, $s1)
+	 
+	indice(numero2, $t3)
+	agregar0(numero2, $t3, aux2)
         
-	
-
         
 operacion:        
         
@@ -140,7 +129,7 @@ operacion:
 					
 suma:	#Operacion de suma 
 	
-	li $t0, 50
+	li $t0, 49
 	li $t9, 0 #Acarreo
 	
 loopS:			 
