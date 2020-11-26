@@ -115,7 +115,7 @@ loopR:
 	lb $t3, %numero_menor($t0)
 	subi $t2, $t2, 0x30 #Convrtir a decimal
 	subi $t3, $t3, 0x30
-	#bgt $t9, $t2, acarreoMayor
+	#beqz $t2, acarreoMayor
 	sub $t2, $t2, $t9 #Continuo y resto el acarreo
 	li $t9, 0
 	bgt $t3, $t2, acarreoResta
@@ -123,7 +123,7 @@ loopR:
 	
 	
 restaC:	# Se continua con la resta
-	addi $t4 $t4, 0x30 #Convertir a ASCII
+	addi $t4, $t4, 0x30 #Convertir a ASCII∫
 	sb $t4, resultado($t0)#Almacenar digito
 	subi $t0, $t0, 1 #Cambiar indice 
 	bgez $t0, loopR
@@ -131,13 +131,17 @@ restaC:	# Se continua con la resta
 	b finalR
 	
 	acarreoResta: 
+	beqz $t2, acarreoMayor
 	addi $t2, $t2, 10
 	li $t9, 1
 	b restaC	
-	
+	#PROBLEMA PRINCIPAL
 	acarreoMayor: 
 	addi $t2, $t2, 10
-	subi $t2, $t2, 1
+	move $t1, $t0
+	subi $t1, $t1, 1
+	li $t7, 9
+	sb $t7, resultado($t1)
 	sub $t4, $t2, $t3
 	b restaC
 
