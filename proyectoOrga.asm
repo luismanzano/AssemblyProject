@@ -1,8 +1,9 @@
 		.data
- bienvenida:	.asciiz "Bienvenido a la calculadora aritmetica de enteros largos\n"
+ bienvenida:	.asciiz "Bienvenido a la calculadora aritmetica de enteros largos\n Debe ingresar sus numeros con sus respectivos signos\n"
  mensaje1: 	.asciiz "Ingrese el primer numero "
  mensaje2: 	.asciiz "Ingrese el segundo numero "
  mensaje3:	.asciiz "Indique la operacion a realizar Sumar(1), Restar(2), Multiplicar(3)"
+ mensaje4:	.asciiz "La multiplicacion puede tardar unos segundos\n"
  mensajeR: 	.asciiz "El resultado de la operacion es "
  continuar:	.asciiz "\n�Desea realizar otra operacion?  SI(1), NO(0)\n"
  salto:		.asciiz "\n"
@@ -37,6 +38,62 @@ loopL:
 	sb $t4, %memoria($t0)
 	subi $t0, $t0, 1
 	bgez $t0, loopL
+	.end_macro
+	
+	.macro signos %numero1, %numero2 #Metodo para validar los signos 
+	
+	li $t0, 0
+	li $t1, 0x30
+	lb $s1, %numero1($t0)#Signo del primer numero
+	sb $t1, %numero1($t0)
+	lb $s2, %numero2($t0)#Signo del segundo numero
+	sb $t1, %numero2($t0)
+	
+	.end_macro
+	
+	.macro asignarSigno %signo #Metodo para asigarn el signo 
+	
+	li $t0, 0
+	sb %signo, resultado($t0)
+	
+	.end_macro
+	
+	.macro validarOperacion %operacion
+	
+	move $t1, %operacion
+	beq $t1, 1, operacionS
+	beq $t1, 2, operacionR
+	beq $t1, 3, operacionM
+	
+operacionS:
+	beq $s1, $s2, seSuman 
+	b seRestan  
+
+operacionR:
+	beq $s1, $s2, seRestan 
+	b seSuman
+
+seSuman:
+	li $t1, 1
+	move %operacion, $t1 
+	b finalV
+	
+seRestan:
+	li $t1, 2
+	move %operacion, $t1
+	b finalV
+
+operacionM:		
+	beq $s1,$s2, signosI
+	b signosD
+
+signosI:
+	li $s0, 0x2b
+	b finalV
+signosD:
+	li $s0, 0x2d			
+finalV:								
+	
 	.end_macro
 	
 	.macro indice %numero, %indice #Metodo para conocer el numero con mas digitos 	
@@ -89,16 +146,18 @@ loopA2:
 es_mayor1:
 
 	li $t8, 0
+	move $s0, $s1 
 	b finalM
 
 es_mayor2:
 	li $t8, 1
+	move $s0, $s2
 	b finalM
 
 es_igual:
 	 	 	 	 	 
 	li $t0, 0
-	
+	move $s0, $s1
 loopM:			 
 	lb $t2, aux1($t0) #Cargo el digito en la posicion $t8
 	lb $t3, aux2($t0) 
@@ -109,12 +168,11 @@ loopM:
 	addi $t0, $t0, 1
 	blt $t0, 49 loopM
 	
-	li $s0, 0
 
 finalM:	 	 
 	.end_macro  
 	 
-	.macro restar %numero_mayor, %numero_menor
+	.macro restar %numero_mayor, %numero_menor #Metodo para restar 
 	 	
 	li $t0, 49
 	li $t9, 0 #Acarreo
@@ -181,6 +239,8 @@ regresar: #Si el usuario desea realizar otra operacion
         
         imprimir_string(salto)
 	
+	signos(numero1, numero2)
+	
 	indice(numero1, $t3)
         agregar0(numero1, $t3, aux1)
          
@@ -201,6 +261,8 @@ operacion:
 	li $v0, 5
 	syscall
 	move $t0, $v0
+        
+        validarOperacion($t0)
         
 	beq $t0, 1, suma
 	beq $t0, 2, resta
@@ -238,19 +300,19 @@ resta:	#Operacion resta
 numero1_es_mayor:				
 
 	restar(aux1, aux2)
-
+	
 	b finalResta
 
 numero2_es_mayor:
 
 	restar(aux2, aux1)
-
+	
 finalResta:
 	b final
 	
 									
 multi:	# Operacion multiplicacion 
-	
+	imprimir_string(mensaje4)
 	li $t0, 49 #Indice 1 
 	li $t1, 49 #Indice 2
 	li $t5, 0 #Acarreo de la multiplicacion 
@@ -288,6 +350,9 @@ multiC2: #Continuo con la multiplicacion
 	
 	
 final: #Imprimir el resultado de la operacion 	
+
+	asignarSigno($s0)
+	
 	imprimir_string(mensajeR)
 	
 	imprimir_string(salto)
