@@ -68,7 +68,7 @@ loopA2:
 	.end_macro 
 	
 	 
-	 .macro es_mayor %indice1, %indice2 #Numero con mas digitos 
+	.macro es_mayor %indice1, %indice2 #Numero con mas digitos 
 	 
 	 move $t0, %indice1
 	 move $t1, %indice2
@@ -90,7 +90,7 @@ es_igual:
 	 	 	 	 	 
 	li $t0, 0
 	
-loopR:			 
+loopM:			 
 	lb $t2, aux1($t0) #Cargo el digito en la posicion $t8
 	lb $t3, aux2($t0) 
 	subi $t2, $t2, 0x30 #Convrtir a decimal
@@ -98,14 +98,14 @@ loopR:
 	bgt $t2, $t3, es_mayor1
 	bgt $t3, $t2, es_mayor2
 	addi $t0, $t0, 1
-	blt $t0, 49 loopR
+	blt $t0, 49 loopM
 	
 	li $s0, 0
 
 finalM:	 	 
-	 .end_macro  
+	.end_macro  
 	 
-	 .macro restar %numero_mayor, %numero_menor
+	.macro restar %numero_mayor, %numero_menor
 	 	
 	li $t0, 49
 	li $t9, 0 #Acarreo
@@ -115,7 +115,7 @@ loopR:
 	lb $t3, %numero_menor($t0)
 	subi $t2, $t2, 0x30 #Convrtir a decimal
 	subi $t3, $t3, 0x30
-	#beqz $t2, acarreoMayor
+	bgt $t9,$t2, acarreoMayor
 	sub $t2, $t2, $t9 #Continuo y resto el acarreo
 	li $t9, 0
 	bgt $t3, $t2, acarreoResta
@@ -131,22 +131,18 @@ restaC:	# Se continua con la resta
 	b finalR
 	
 	acarreoResta: 
-	beqz $t2, acarreoMayor
 	addi $t2, $t2, 10
 	li $t9, 1
+	sub $t4, $t2, $t3
 	b restaC	
-	#PROBLEMA PRINCIPAL
+	
 	acarreoMayor: 
-	addi $t2, $t2, 10
-	move $t1, $t0
-	subi $t1, $t1, 1
-	li $t7, 9
-	sb $t7, resultado($t1)
+	li $t2, 9
 	sub $t4, $t2, $t3
 	b restaC
 
 finalR:	
-	 .end_macro
+	.end_macro
 	 
 	 
 	
@@ -208,7 +204,7 @@ suma:	#Operacion de suma
 	li $t9, 0 #Acarreo
 	
 loopS:			 
-	lb $t2, aux1($t0) #Cargo el digito en la posicion $t8
+	lb $t2, aux1($t0) #Cargo el digito en la posicion $t0
 	lb $t3, aux2($t0)
 	subi $t2, $t2, 0x30 #Convrtir a decimal
 	subi $t3, $t3, 0x30
@@ -225,7 +221,7 @@ sumaC:	# Se continua con la suma
 	b final
 		
 
-resta:	
+resta:	#Operacion resta 
 	beq $t8, 0, numero1_es_mayor
 	beq $t8, 1, numero2_es_mayor
 
@@ -241,18 +237,38 @@ numero2_es_mayor:
 
 finalResta:
 	b final
-					
-multi:	
-	li $v0, 1
-	li $a0, 2
-	syscall
+	
+									
+multi:	# Operacion multiplicacion 
+	li $t0, 49 #Indice 1 
+	li $t1, 49 #Indice 2
+	li $t5, 0 #Acarreo
+	b loopX2
+loopX1:
+	subi $t1, $t1, 1
+	li $t0, 49
+loopX2:	
+	lb $t2, aux1($t0)
+	lb $t3, aux2($t1)
+	subi $t2, $t2, 0x30
+	subi $t3, $t3, 0x30
+	mul $t4, $t2, $t3
+	add $t4, $t4, $t5
+	bgt $t4, 9, acarreoMultiplicacion1
+multiC: #Continuo con la multiplicacion 
+	add $t4, $t4, 0x30
+	sb $t4, resultado($t1)	
+	subi $t0, $t0, 1
+	bgez $t0, loopX2
+	bgez $t1, loopX1
+	
 	
 final: #Imprimir el resultado de la operacion 	
 	imprimir_string(mensajeR)
 	
 	imprimir_string(salto)
 	
-	imprimir_string(resultado)
+	imprimir_string(resultado) #Aqui se imprime el resultado de las operaciones 
 	
 	imprimir_string(continuar)
 	
@@ -269,6 +285,15 @@ acarreoSuma: #Llevo 1 en la suma
 	subi $t4, $t4, 10
 	li $t9, 1
 	b sumaC
+	
+acerroMultiplicacion1:
+	
+	div $t4, 10
+	mfhi $t4 #Almaceno el resto para ser guardado en resultado 
+	mflo $t5 #El resultado de la division la almaceno como acarreo 
+	b multiC
+
+acarreoMultiplicacion2:	
 	
 limpiar:
 	resetar(numero1)
