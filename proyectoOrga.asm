@@ -20,7 +20,7 @@
 	syscall
 	.end_macro
 	
-	.macro resetar %memoria
+	.macro resetar %memoria #Metodo para limpiar los registros 
 	li $t0, 49
 	li $t4, 0x00
 loopL:
@@ -28,6 +28,15 @@ loopL:
 	subi $t0, $t0, 1
 	bgez $t0, loopL
 	
+	.end_macro
+	
+	.macro inicializar %memoria #Metodo para inicializar el registro con 0
+	li $t0, 49
+	li $t4, 0x30
+loopL:
+	sb $t4, %memoria($t0)
+	subi $t0, $t0, 1
+	bgez $t0, loopL
 	.end_macro
 	
 	.macro indice %numero, %indice #Metodo para conocer el numero con mas digitos 	
@@ -180,6 +189,7 @@ regresar: #Si el usuario desea realizar otra operacion
 	
 	es_mayor($t3, $t5)
         
+        inicializar(resultado)
         
 operacion:        
         
@@ -240,12 +250,16 @@ finalResta:
 	
 									
 multi:	# Operacion multiplicacion 
+	
 	li $t0, 49 #Indice 1 
 	li $t1, 49 #Indice 2
-	li $t5, 0 #Acarreo
+	li $t5, 0 #Acarreo de la multiplicacion 
+	li $t6, 0 #Acarreo de la suma
+	li $t9, 0 #Deplazar indice 
 	b loopX2
 loopX1:
 	subi $t1, $t1, 1
+	addi $t9, $t9, 1
 	li $t0, 49
 loopX2:	
 	lb $t2, aux1($t0)
@@ -254,10 +268,20 @@ loopX2:
 	subi $t3, $t3, 0x30
 	mul $t4, $t2, $t3
 	add $t4, $t4, $t5
-	bgt $t4, 9, acarreoMultiplicacion1
-multiC: #Continuo con la multiplicacion 
+	li $t5, 0
+	b  acarreoMultiplicacion1 #$t4, 9,
+multiC1: #Continuo con la multiplicacion 	
+	sub $t8, $t0, $t9
+	lb $t7, resultado($t8)
+	subi $t7, $t7, 0x30
+	add $t4, $t4, $t7
+	add $t4, $t4, $t6
+	li $t6, 0
+	bgt $t4, 9, acarreoMultiplicacion2
+multiC2: #Continuo con la multiplicacion 
 	add $t4, $t4, 0x30
-	sb $t4, resultado($t1)	
+	  
+	sb $t4, resultado($t8)	
 	subi $t0, $t0, 1
 	bgez $t0, loopX2
 	bgez $t1, loopX1
@@ -286,14 +310,17 @@ acarreoSuma: #Llevo 1 en la suma
 	li $t9, 1
 	b sumaC
 	
-acerroMultiplicacion1:
+acarreoMultiplicacion1:
 	
-	div $t4, 10
+	div $t4, $t4,10
 	mfhi $t4 #Almaceno el resto para ser guardado en resultado 
 	mflo $t5 #El resultado de la division la almaceno como acarreo 
-	b multiC
+	b multiC1
 
 acarreoMultiplicacion2:	
+	subi $t4, $t4, 10
+	li $t6, 1
+	b multiC2
 	
 limpiar:
 	resetar(numero1)
