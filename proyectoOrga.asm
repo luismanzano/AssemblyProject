@@ -3,8 +3,7 @@
  mensaje1: 	.asciiz "Ingrese el primer numero "
  mensaje2: 	.asciiz "Ingrese el segundo numero "
  mensaje3:	.asciiz "Indique la operacion a realizar Sumar(1), Restar(2), Multiplicar(3)"
- mensaje4:	.asciiz "La multiplicacion puede tardar unos segundos\n"
- mensajeR: 	.asciiz "El resultado de la operacion es "
+ mensajeR: 	.asciiz "El resultado de la operacion es... "
  continuar:	.asciiz "\n¿Desea realizar otra operacion?  SI(1), NO(0)\n"
  salto:		.asciiz "\n"
  numero1: 	.space 50 
@@ -312,7 +311,7 @@ finalResta:
 	
 									
 multi:	# Operacion multiplicacion 
-	imprimir_string(mensaje4)
+	
 	li $t0, 49 #Indice 1 
 	li $t1, 49 #Indice 2
 	li $t5, 0 #Acarreo de la multiplicacion 
